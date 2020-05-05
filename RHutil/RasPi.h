@@ -72,4 +72,6 @@ void delay (unsigned long delay);
 
 long random(long min, long max);
 
+extern void resetTimerValue();
+
 #endif

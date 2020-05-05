@@ -173,4 +173,9 @@ size_t SerialSimulator::println(unsigned char ch, int base)
   printf("\n");
 }
 
+void resetTimerValue() {
+    gettimeofday(&RHStartTime, NULL);
+}
+
+
 #endif
