@@ -14,7 +14,7 @@
 
 #if (RH_PLATFORM == RH_PLATFORM_RPI)
 #include <RHGenericDriver.h>
-#include <RHLinuxSPI.h>
+#include <RHWirePiSPI.h>
 #else
 #include <RHSPIDriver.h>
 #endif
@@ -404,7 +404,7 @@
 /// (Caution: we dont claim laboratory accuracy for these measurements)
 /// You would not expect to get anywhere near these powers to air with a simple 1/4 wavelength wire antenna.
 #if (RH_PLATFORM == RH_PLATFORM_RPI)
-class RH_RF95 : public RHGenericDriver, public RHLinuxSPI
+class RH_RF95 : public RHWirePiSPI
 #else
 class RH_RF95 : public RHSPIDriver
 #endif
@@ -458,7 +458,7 @@ public:
     /// \param[in] spi Pointer to the SPI interface object to use. 
     ///                Defaults to the standard Arduino hardware SPI interface
 #if (RH_PLATFORM == RH_PLATFORM_RPI)
-    RH_RF95(uint8_t slaveSelectPin = 253, uint8_t interruptPin = 4);
+    RH_RF95(uint8_t slaveSelectPin = 25, uint8_t interruptPin = 4, uint8_t resetPin = 17, uint8_t spiChannel = 0);
 #else
     RH_RF95(uint8_t slaveSelectPin = SS, uint8_t interruptPin = 2, RHGenericSPI& spi = hardware_spi);
 #endif
@@ -602,6 +602,10 @@ private:
 
     /// True when there is a valid message in the buffer
     volatile bool       _rxBufValid;
+
+    // Used by Raspberry Pi Dragino HAT
+    uint8_t _resetPin;
+    int _initCalled = 0;
 };
 
 /// @example rf95_client.pde
