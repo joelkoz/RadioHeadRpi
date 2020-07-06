@@ -24,7 +24,9 @@ PROGMEM static const RH_RF95::ModemConfig MODEM_CONFIG_TABLE[] =
 };
 
 #if (RH_PLATFORM == RH_PLATFORM_RPI)
-RH_RF95::RH_RF95(uint8_t slaveSelectPin, uint8_t interruptPin)
+RH_RF95::RH_RF95(uint8_t slaveSelectPin, uint8_t interruptPin, uint8_t resetPin, uint8_t spiChannel)
+  :
+  RHWirePiSPI(slaveSelectPin, spiChannel)
 #else
 RH_RF95::RH_RF95(uint8_t slaveSelectPin, uint8_t interruptPin, RHGenericSPI& spi)
     :
@@ -34,12 +36,20 @@ RH_RF95::RH_RF95(uint8_t slaveSelectPin, uint8_t interruptPin, RHGenericSPI& spi
 {
     _interruptPin = interruptPin;
     _myInterruptIndex = 0xff; // Not allocated yet
+#if (RH_PLATFORM == RH_PLATFORM_RPI)
+    _resetPin = resetPin;
+#endif
 }
 
 bool RH_RF95::init()
 {
+    if (_initCalled != 0) {
+        return (_initCalled == 1);
+    }
+    _initCalled = -1;
+
 #if (RH_PLATFORM == RH_PLATFORM_RPI)
-    if(!RHLinuxSPI::init("/dev/spidev0.0"))
+    if(!RHWirePiSPI::init())
 #else
     if (!RHSPIDriver::init())
 #endif
@@ -48,20 +58,40 @@ bool RH_RF95::init()
     // Determine the interrupt number that corresponds to the interruptPin
 #if (RH_PLATFORM != RH_PLATFORM_RPI)
     int interruptNumber = digitalPinToInterrupt(_interruptPin);
-    if (interruptNumber == NOT_AN_INTERRUPT)
-	return false;
+    if (interruptNumber == NOT_AN_INTERRUPT) {
+       printf("Bad interupt initialization\n");
+	   return false;
+    }
 #endif
 
-    // No way to check the device type :-(
+#if (RH_PLATFORM == RH_PLATFORM_RPI)
+    pinMode(_resetPin, OUTPUT);
+
+    // Do a chip check...
+    digitalWrite(_resetPin, LOW);
+    delay(100);
+    digitalWrite(_resetPin, HIGH);
+    delay(100);
+    uint8_t version = spiRead(RH_RF95_REG_42_VERSION);
+    if (version == 0x12) {
+        // sx1276
+        printf("SX1276 detected.\n");
+    } else {
+        printf("SX1276 version check failed (version reported as %d)\n", version);
+        return false;
+    }
+#endif
 
     // Set sleep mode, so we can also set LORA mode:
     spiWrite(RH_RF95_REG_01_OP_MODE, RH_RF95_MODE_SLEEP | RH_RF95_LONG_RANGE_MODE);
-    delay(10); // Wait for sleep mode to take over from say, CAD
+
+    delay(100); // Wait for sleep mode to take over from say, CAD
     // Check we are in sleep mode, with LORA set
-    if (spiRead(RH_RF95_REG_01_OP_MODE) != (RH_RF95_MODE_SLEEP | RH_RF95_LONG_RANGE_MODE))
+    uint8_t opMode = spiRead(RH_RF95_REG_01_OP_MODE);
+    if (opMode != (RH_RF95_MODE_SLEEP | RH_RF95_LONG_RANGE_MODE))
     {
-//	Serial.println(spiRead(RH_RF95_REG_01_OP_MODE), HEX);
-	return false; // No device present?
+        printf("Failed to set Lora opMode. Checked value was %d\n", opMode);
+	    return false; // No device present?
     }
 
     // Add by Adrien van den Bossche <vandenbo@univ-tlse2.fr> for Teensy
@@ -98,9 +128,12 @@ bool RH_RF95::init()
 		case 2:
 			attachInterrupt(_interruptPin, isr2, INT_EDGE_RISING);
 			break;
-		default:
+		default: {
+            printf("Bad interrupt index: %d\n", _myInterruptIndex);
 			return false;
+        }
 	}
+    printf("Interrupt handler assigned on pin %d\n", _interruptPin);
 #else
     if (_myInterruptIndex == 0)
 	attachInterrupt(interruptNumber, isr0, RISING);
@@ -135,6 +168,7 @@ bool RH_RF95::init()
     // Lowish power
     setTxPower(13);
 
+    _initCalled = 1;
     return true;
 }
 
@@ -324,6 +358,7 @@ bool RH_RF95::setFrequency(float centre)
     spiWrite(RH_RF95_REG_07_FRF_MID, (frf >> 8) & 0xff);
     spiWrite(RH_RF95_REG_08_FRF_LSB, frf & 0xff);
 
+    printf("LoRa frequency set to %f\n", centre);
     return true;
 }
 
