@@ -73,7 +73,6 @@ void attachInterrupt(uint8_t gpio, void (*function)(void), int mode) {
 
 RH_LoRa::RH_LoRa(uint8_t slaveSelectPin, uint8_t DIO0Pin, uint8_t resetPin, RHGenericSPI& spi) :
   RHSPIDriver(slaveSelectPin, spi),
-  _ss(slaveSelectPin),
   _dio0(DIO0Pin),
   _reset(resetPin)
 {
@@ -373,25 +372,6 @@ bool RH_LoRa::send(const uint8_t* data, uint8_t len)
     return true;
 }
 
-bool RH_LoRa::printRegisters()
-{
-#ifdef RH_HAVE_SERIAL
-    uint8_t registers[] = { 0x01, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x014, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27};
-
-    uint8_t i;
-    for (i = 0; i < sizeof(registers); i++)
-    {
-#if (RH_PLATFORM == RH_PLATFORM_RPI)
-	printf("0x%2.2X\n", spiRead(registers[i]));
-#else
-	Serial.print(registers[i], HEX);
-	Serial.print(": ");
-	Serial.println(spiRead(registers[i]), HEX);
-#endif
-    }
-#endif
-    return true;
-}
 
 uint8_t RH_LoRa::maxMessageLength()
 {
@@ -439,18 +419,18 @@ void RH_LoRa::setModeTx()
 }
 
 
-int RH_Lora::packetRssi()
+int RH_LoRa::packetRssi()
 {
   return (spiRead(REG_PKT_RSSI_VALUE) - (_frequency < 868E6 ? 164 : 157));
 }
 
-float RH_Lora::packetSnr()
+float RH_LoRa::packetSnr()
 {
   return ((int8_t)spiRead(REG_PKT_SNR_VALUE)) * 0.25;
 }
 
 
-void RH_Lora::setTxPower(int8_t power, int8_t outputPin)
+void RH_LoRa::setTxPower(int8_t power, int8_t outputPin)
 {
 	  uint8_t paConfig = 0;
 	  uint8_t paDac = 0;
@@ -512,7 +492,7 @@ void RH_Lora::setTxPower(int8_t power, int8_t outputPin)
 	  spiWrite( REG_PaDac, paDac );
 }
 
-void RH_Lora::setTxPowerMax(int level)
+void RH_LoRa::setTxPowerMax(int level)
 {
 	if (level < 5)		{
 		level = 5;
@@ -525,16 +505,18 @@ void RH_Lora::setTxPowerMax(int level)
 	spiWrite(REG_PA_CONFIG, RF_PACONFIG_PASELECT_PABOOST | (level - 5));
 }
 
-void RH_Lora::setFrequency(long frequency)
+bool RH_LoRa::setFrequency(long frequency)
 {
   _frequency = frequency;
   uint64_t frf = ((uint64_t)frequency << 19) / 32000000;
   spiWrite(REG_FRF_MSB, (uint8_t)(frf >> 16));
   spiWrite(REG_FRF_MID, (uint8_t)(frf >> 8));
   spiWrite(REG_FRF_LSB, (uint8_t)(frf >> 0));
+
+  return true;
 }
 
-void RH_Lora::setSpreadingFactor(int sf)
+void RH_LoRa::setSpreadingFactor(int sf)
 {
   if (sf < 6) {
   	sf = 6; 
@@ -552,7 +534,7 @@ void RH_Lora::setSpreadingFactor(int sf)
   spiWrite(REG_MODEM_CONFIG_2, (spiRead(REG_MODEM_CONFIG_2) & 0x0f) | ((sf << 4) & 0xf0));
 }
 
-void RH_Lora::setSignalBandwidth(long sbw)
+void RH_LoRa::setSignalBandwidth(long sbw)
 {
   int bw;
 
@@ -569,7 +551,7 @@ void RH_Lora::setSignalBandwidth(long sbw)
   spiWrite(REG_MODEM_CONFIG_1,(spiRead(REG_MODEM_CONFIG_1) & 0x0f) | (bw << 4));
 }
 
-void RH_Lora::setCodingRate4(int denominator)
+void RH_LoRa::setCodingRate4(int denominator)
 {
   if (denominator < 5) {
     denominator = 5;
@@ -580,28 +562,28 @@ void RH_Lora::setCodingRate4(int denominator)
   spiWrite(REG_MODEM_CONFIG_1, (spiRead(REG_MODEM_CONFIG_1) & 0xf1) | (cr << 1));
 }
 
-void RH_Lora::setPreambleLength(long length)
+void RH_LoRa::setPreambleLength(long length)
 {
   spiWrite(REG_PREAMBLE_MSB, (uint8_t)(length >> 8));
   spiWrite(REG_PREAMBLE_LSB, (uint8_t)(length >> 0));
 }
 
-void RH_Lora::setSyncWord(int sw)
+void RH_LoRa::setSyncWord(int sw)
 {
   spiWrite(REG_SYNC_WORD, sw);
 }
 
-void RH_Lora::enableCrc()
+void RH_LoRa::enableCrc()
 {
   spiWrite(REG_MODEM_CONFIG_2, spiRead(REG_MODEM_CONFIG_2) | 0x04);
 }
 
-void RH_Lora::disableCrc()
+void RH_LoRa::disableCrc()
 {
   spiWrite(REG_MODEM_CONFIG_2, spiRead(REG_MODEM_CONFIG_2) & 0xfb);
 }
 
-void RH_Lora::explicitHeaderMode()
+void RH_LoRa::explicitHeaderMode()
 {
   spiWrite(REG_MODEM_CONFIG_1, spiRead(REG_MODEM_CONFIG_1) & 0xfe);
 }

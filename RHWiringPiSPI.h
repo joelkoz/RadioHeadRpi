@@ -24,6 +24,7 @@ public:
 
     /// Initialise the Driver transport hardware and software.
     virtual void begin();
+    virtual void begin(char*) { begin(); }
 
     virtual void end() {}
 

@@ -9,10 +9,9 @@
 
 #include "RHSPIDriver.h"
 
-#define RH_LORA_MAX_PAYLOAD_LEN 255
-
 #if (RH_PLATFORM == RH_PLATFORM_RPI)
-// Dragino Raspberry Pi LoRa HAT settings...
+// Dragino Raspberry Pi LoRa HAT settings
+// using WiringPi numbering scheme...
 #define LORA_DEFAULT_SS_PIN     6
 #define LORA_DEFAULT_RESET_PIN  0
 #define LORA_DEFAULT_DIO0_PIN   7
@@ -43,6 +42,25 @@
 #endif
 
 
+/*!
+ * RegPaConfig
+ */
+#define RF_PACONFIG_PASELECT_MASK                   0x7F
+#define RF_PACONFIG_PASELECT_PABOOST                0x80
+#define RF_PACONFIG_PASELECT_RFO                    0x00 // Default
+
+#define RF_PACONFIG_MAX_POWER_MASK                  0x8F
+
+#define RF_PACONFIG_OUTPUTPOWER_MASK                0xF0
+
+/*!
+ * RegPaDac
+ */
+#define RF_PADAC_20DBM_MASK                         0xF8
+#define RF_PADAC_20DBM_ON                           0x07
+#define RF_PADAC_20DBM_OFF                          0x04  // Default
+
+
 /////////////////////////////////////////////////////////////////////
 /// \class RH_LoRa RH_LoRa.h
 /// \brief Driver to send and receive unaddressed, unreliable datagrams via a LoRa 
@@ -54,7 +72,7 @@
 class RH_LoRa : public RHSPIDriver
 {
 public:
-    RH_Lora(uint8_t slaveSelectPin=LORA_DEFAULT_SS_PIN, uint8_t DIO0Pin=LORA_DEFAULT_DIO0_PIN, uint8_t resetPin=LORA_DEFAULT_RESET_PIN, RHGenericSPI& spi = hardware_spi);
+    RH_LoRa(uint8_t slaveSelectPin=LORA_DEFAULT_SS_PIN, uint8_t DIO0Pin=LORA_DEFAULT_DIO0_PIN, uint8_t resetPin=LORA_DEFAULT_RESET_PIN, RHGenericSPI& spi = hardware_spi);
 
 
     /// Initialise the Driver transport hardware and software.
@@ -113,7 +131,7 @@ public:
     // From Heltec LoRa code...
     void setTxPower(int8_t power, int8_t outputPin);
     void setTxPowerMax(int level);
-    void setFrequency(long frequency);
+    bool setFrequency(long frequency);
     void setSpreadingFactor(int sf);
     void setSignalBandwidth(long sbw);
     void setCodingRate4(int denominator);
@@ -178,6 +196,9 @@ private:
     uint8_t _reset;
 
     int _initCalled = 0;
+
+    int _frequency;
+    
 };
 
 #endif

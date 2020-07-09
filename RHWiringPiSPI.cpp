@@ -18,6 +18,6 @@ void RHWiringPiSPI::begin()
 }
 
 uint8_t RHWiringPiSPI::transfer(uint8_t data) {
-    wiringPiSPIDataRW(_spiChannel, data, 1);
+    wiringPiSPIDataRW(_spiChannel, &data, 1);
     return data;
 }
