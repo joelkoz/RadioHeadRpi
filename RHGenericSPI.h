@@ -102,6 +102,9 @@ public:
     /// Call this after configuring and before using the SPI library
 #if (RH_PLATFORM == RH_PLATFORM_RPI)
     virtual void begin(char*) = 0;
+    static char* defaultSPIDeviceNode = "/dev/spidev0.0";
+    char* _defaultSPIDeviceNode = defaultSPIDeviceNode;
+    virtual void begin() { begin(_defaultSPIDeviceNode); }
 #else
     virtual void begin() = 0;
 #endif

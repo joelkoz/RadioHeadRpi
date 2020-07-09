@@ -7,7 +7,12 @@
 #define RHSPIDriver_h
 
 #include <RHGenericDriver.h>
+
+#if (RH_PLATFORM == RH_PLATFORM_RPI)
+#include "RHWiringPiSPI.h"
+#else
 #include <RHHardwareSPI.h>
+#endif
 
 // This is the bit in the SPI address that marks it as a write
 #define RH_SPI_WRITE_MASK 0x80
