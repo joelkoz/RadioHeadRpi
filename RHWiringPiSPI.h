@@ -8,8 +8,11 @@
 
 /////////////////////////////////////////////////////////////////////
 /// \class RHWiringPiSPI RHWiringPiSPI.h <RHWiringPiSPI.h>
-/// \brief Base class for a RadioHead driver that uses WiringPi and
-/// its SPI library to access the SPI bus to communicate with its transport hardware.
+/// \brief An SPI driver for RadioHead that uses WiringPi and
+/// its SPI library to access the SPI bus to communicate with its 
+/// transport hardware. This is a low level driver that does not
+/// manage any slave selection pins. That is left to higher 
+/// level drivers (most notebly RHSPIDriver)
 ///
 class RHWiringPiSPI : public RHGenericSPI
 {

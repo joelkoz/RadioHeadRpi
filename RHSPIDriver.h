@@ -27,7 +27,7 @@ class RHGenericSPI;
 /// This class can be subclassed by Drivers that require to use the SPI bus.
 /// It can be configured to use either the RHHardwareSPI class (if there is one available on the platform)
 /// of the bitbanged RHSoftwareSPI class. The default behaviour is to use a pre-instantiated built-in RHHardwareSPI
-/// interface.
+/// interface (or in the case of a Raspberry Pi, the RHWiringPiSPI interface)
 ///
 /// SPI bus access is protected by ATOMIC_BLOCK_START and ATOMIC_BLOCK_END, which will ensure interrupts 
 /// are disabled during access.
