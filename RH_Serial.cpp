@@ -12,6 +12,7 @@ RH_Serial::RH_Serial(HardwareSerial& serial)
     _serial(serial),
     _rxState(RxStateInitialising)
 {
+	clearRxBuf();
 }
 
 HardwareSerial& RH_Serial::serial()
@@ -60,7 +61,7 @@ bool RH_Serial::waitAvailableTimeout(uint16_t timeout)
     }
     return false;
 #else
-    RHGenericDriver::waitAvailableTimeout(timeout);
+    return RHGenericDriver::waitAvailableTimeout(timeout);
 #endif
 }
 
