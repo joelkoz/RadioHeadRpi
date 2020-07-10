@@ -178,6 +178,8 @@ public:
     void setModeTx();
 
     void setModeSleep();
+    virtual bool sleep() override; // From RHGenericDriver
+
 
     // From Heltec LoRa code...
     void setTxPower(int8_t power, int8_t outputPin);

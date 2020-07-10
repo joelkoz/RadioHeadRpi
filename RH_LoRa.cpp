@@ -111,7 +111,7 @@ bool RH_LoRa::init()
     }
 
     // put in sleep mode
-    sleep();
+    setModeSleep();
 
     // set frequency
     setFrequency(LORA_FREQUENCY_DEFAULT);
@@ -398,6 +398,12 @@ void RH_LoRa::setModeSleep()
 	   spiWrite(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_SLEEP);
 	   _mode = RHModeSleep;
     }
+}
+
+
+bool RH_LoRa::sleep() { 
+   setModeSleep(); 
+   return true; 
 }
 
 
