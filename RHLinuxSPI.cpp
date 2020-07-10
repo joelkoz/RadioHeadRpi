@@ -26,7 +26,7 @@ bool RHLinuxSPI::init(const char* pDevice)
 		perror("Unable to open SPI device");
 		return false;
 	}
-	usleep(100000);
+	// usleep(100000); Why pause execution for 100 seconds!?
 
 	return true;
 }
