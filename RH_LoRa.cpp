@@ -232,9 +232,7 @@ piLock(0);
         spiWrite(REG_IRQ_FLAGS, 0xff); // Clear all IRQ flags
 
         // Remember the RSSI of this packet
-        // this is according to the doc, but is it really correct?
-        // weakest receiveable signals are reported RSSI at about -66
-        _lastRssi = spiRead(REG_PKT_RSSI_VALUE) - 137;
+        _lastRssi = packetRssi();
 
         // We have received a message.
         validateRxBuf();
