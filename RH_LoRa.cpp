@@ -88,6 +88,7 @@ bool RH_LoRa::init()
     _initCalled = -1;
 
     if (!RHSPIDriver::init()) {
+        printf("Failed to initialize SPI driver\n");
         return false;
     }
 
@@ -156,17 +157,19 @@ bool RH_LoRa::init()
     }
 #endif
 
-    if (_myInterruptIndex == 0xff)
-    {
-	// First run, no interrupt allocated yet
-	if (_interruptCount < MAX_MCU_INTERUPTS)
-	    _myInterruptIndex = _interruptCount++;
-	else
-        printf("LoRa radio count exceeds MCU interupt capability.\n");
-	    return false; // Too many devices, not enough interrupt vectors
-    }
-    _deviceForInterrupt[_myInterruptIndex] = this;
-
+    if (_myInterruptIndex == 0xff) {
+    
+	    // First run, no interrupt allocated yet
+	    if (_interruptCount < MAX_MCU_INTERUPTS) {
+    	    _myInterruptIndex = _interruptCount++;
+      }
+	    else {
+         printf("LoRa radio count exceeds MCU interupt capability.\n");
+	       return false; // Too many devices, not enough interrupt vectors
+      }
+      _deviceForInterrupt[_myInterruptIndex] = this;
+   }
+   
 #if (RH_PLATFORM == RH_PLATFORM_RPI)
 	switch( _myInterruptIndex ){
 		case 0:
