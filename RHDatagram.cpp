@@ -71,7 +71,11 @@ bool RHDatagram::waitPacketSent(uint16_t timeout)
 
 bool RHDatagram::waitAvailableTimeout(uint16_t timeout)
 {
-    return _driver.waitAvailableTimeout(timeout);
+    bool result = _driver.waitAvailableTimeout(timeout);
+    if (!result) {
+        printf("    waitAvailableTimeout(%d) timed out with no msg.\n", timeout);
+    }
+    return result;
 }
 
 uint8_t RHDatagram::thisAddress()
